@@ -12,7 +12,16 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+/* Que la app ocupe toda la pantalla */
+html, body, #root { height: 100%; }
+body { margin: 0; }
 
+/* Quitar límites del template de Vite */
+#root {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
 a {
   font-weight: 500;
   color: #646cff;
