@@ -16,7 +16,8 @@ export default function LoginPage() {
       <div
         style={{
           width: "100%",
-          maxWidth: 460,
+          maxWidth: 460,           // <- límite de ancho
+          margin: "0 auto",        // <- centra horizontalmente el card
           background: "#fff",
           borderRadius: 12,
           boxShadow: "0 10px 30px rgba(0,0,0,.08)",

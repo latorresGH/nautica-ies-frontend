@@ -12,3 +12,6 @@ export function setAuthToken(token?: string) {
     delete http.defaults.headers.common["Authorization"];
   }
 }
+// 👇 mantenerse logueado para ver renders
+const saved = localStorage.getItem("accessToken");
+if (saved) setAuthToken(saved);

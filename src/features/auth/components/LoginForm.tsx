@@ -32,7 +32,7 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} style={{ maxWidth: 380, width: "100%" }}>
-      <h1 style={{ marginBottom: 16 }}>Iniciar sesión</h1>
+     {/* <h1 style={{ marginBottom: 16 }}>Iniciar sesión</h1>*/}
 
       <label style={{ display: "block", marginTop: 8 }}>Email</label>
       <input
