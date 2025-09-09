@@ -1,0 +1,59 @@
+----------------------------------------------------------------------------------BACKEND----------------------------------------------------------------------------------
+## 1) Login → devolver 200 (no 201)
+BACKEND
+
+## 2) CREAR -> /api/auth/logout` + invalidación de refresh (mínimo viable) 
+
+**Idea**: al hacer logout, marcás el refresh como revocado (ideal: tabla en BD con hash del token).
+MVP (en memoria, para empezar):
+
+
+## 3) MENSAJES DE ERRORES --> Mapeo de errores (401 en credenciales)
+
+En tu `ApiExceptionHandler`:
+
+```java
+@ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+public ResponseEntity<java.util.Map<String,Object>> handleBadCred(
+        Exception ex, jakarta.servlet.http.HttpServletRequest req) {
+    var body = java.util.Map.of(
+        "timestamp", java.time.Instant.now().toString(),
+        "status", 401,
+        "error", "Unauthorized",
+        "message", "Credenciales inválidas",
+        "path", req.getRequestURI()
+    );
+    return ResponseEntity.status(401).body(body);
+}
+
+----------------------------------------------------------------------------------FRONTEND----------------------------------------------------------------------------------
+
+## 1) Logout del lado cliente + servidor
+
+En el botón “Cerrar sesión”:
+
+Antes de limpiar tokens, intenta revocar en server
+await apiClient.post("/auth/logout", { refreshToken: localStorage.getItem("refresh_token") })
+  .catch(() => {/* si falla igual seguimos */});
+
+logout(); // limpia tokens y estado, y redirigís
+
+## 2)
+
+Intentar ver si el useAuth y el userContext se puede manejar a nivel global para asi no tener que importarlo en cada .tsx como en el home.tsx, navbar.tsx, api.tsx, etc
+
+---
+# EXTRA❓¿Por qué necesito `/api/auth/me` si ya estoy autenticado?
+
+Porque **el JWT solo trae lo que vos pusiste adentro** (por ej., `sub`, `rol`, `exp`).
+Si querés **nombre/apellido** u otros datos de perfil **consistentes con la BD**, tenés 2 opciones:
+
+1. **Meterlos como claims** en el access token (rápido, pero el token crece y quedan “cacheados” hasta expirar).
+2. **Exponer `/api/auth/me`**: con el access token vigente, el backend mira quién sos (por el `sub` del token), va a la BD y devuelve los datos **actualizados**. Esto mantiene el token liviano y la UI siempre sincronizada con la base.
+
+---
+
+
+
+
+
