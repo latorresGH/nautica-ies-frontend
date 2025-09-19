@@ -8,25 +8,12 @@ type JwtResponse =
 const ACCESS = "access_token";
 const REFRESH = "refresh_token";
 
-/**
- * Login usando correo + contrasena (como espera tu backend).
- * POST /auth/login  body: { correo, contrasena }
- */
 export async function login(correo: string, contrasena: string) {
-  const { data } = await apiClient.post<JwtResponse>("/auth/login", {
-    correo,
-    contrasena,
-  });
+  const { data } = await apiClient.post<JwtResponse>("/auth/login", { correo, contrasena });
 
-  // normaliza nombres de props (por si el backend usa "accessToken"/"refreshToken")
-  const access =
-    (data as any).access ?? (data as any).accessToken;
-  const refresh =
-    (data as any).refresh ?? (data as any).refreshToken;
-
-  if (!access || !refresh) {
-    throw new Error("La respuesta de login no trae tokens válidos");
-  }
+  const access = (data as any).access ?? (data as any).accessToken;
+  const refresh = (data as any).refresh ?? (data as any).refreshToken;
+  if (!access || !refresh) throw new Error("La respuesta de login no trae tokens válidos");
 
   localStorage.setItem(ACCESS, access);
   localStorage.setItem(REFRESH, refresh);
@@ -34,20 +21,12 @@ export async function login(correo: string, contrasena: string) {
   return { access, refresh };
 }
 
-/**
- * Refresh del access token usando el refresh token guardado
- * POST /auth/refresh  body: { refreshToken }
- */
 export async function refreshAccessToken() {
   const refresh = localStorage.getItem(REFRESH);
   if (!refresh) throw new Error("No hay refresh token");
 
-  const { data } = await apiClient.post<JwtResponse>("/auth/refresh", {
-    refreshToken: refresh,
-  });
-
-  const newAccess =
-    (data as any).access ?? (data as any).accessToken;
+  const { data } = await apiClient.post<JwtResponse>("/auth/refresh", { refreshToken: refresh });
+  const newAccess = (data as any).access ?? (data as any).accessToken;
   if (!newAccess) throw new Error("Refresh sin access token");
 
   localStorage.setItem(ACCESS, newAccess);
@@ -66,7 +45,6 @@ export function getTokens() {
   };
 }
 
-/** (Opcional) Decodifica el payload del JWT para UI (sin validar firma) */
 export function decodeJwt(token?: string) {
   if (!token) return null;
   try {

@@ -1,83 +1,57 @@
-/** 
- * Configuración de la API
- * Este archivo centraliza las llamadas HTTP al backend.
- * Se encarga de:
- *  - Definir la URL base de la API
- *  - Construir URLs completas sin errores de "/" o "api/api"
- *  - Adjuntar el token JWT en cada petición (si existe)
- *  - Manejar errores comunes (401, 403, etc.)
- */
+// src/api/http.ts
+import { getTokens, refreshAccessToken } from "../services/authService";
+
+/** URL base (ej: http://localhost:8080/api) */
 const BASE = (import.meta.env.VITE_API_URL as string) || "";
-// BASE = URL base de la API, obtenida desde las variables de entorno (ej: http://localhost:8080/api)
 
-
-/**
- * Construye una URL final a partir de la BASE y el path recibido.
- * - Elimina slashes repetidos al inicio y final.
- * - Evita que quede /api/api cuando BASE ya incluye /api.
- * @param path Ruta relativa (ej: "/clientes", "/api/usuarios")
- * @returns string URL final lista para el fetch
- */
+/** Une BASE + path evitando // y evitando /api/api */
 function buildUrl(path: string) {
-  const base = BASE.replace(/\/+$/, ""); // quita slashes al final de BASE
-  let p = path.replace(/^\/+/, "");      // quita slashes al inicio de path
-
-  // Si BASE ya termina en "/api" y el path empieza con "api/",
-  // recortamos "api/" para que no quede duplicado.
+  const base = BASE.replace(/\/+$/, "");
+  let p = path.replace(/^\/+/, "");
   if (base.endsWith("/api") && p.startsWith("api/")) p = p.slice(4);
-
   return `${base}/${p}`;
 }
 
-
-/**
- * Obtiene el token de autenticación JWT guardado en el navegador.
- * Busca primero en localStorage y luego en sessionStorage.
- * @returns string|null El token JWT o null si no existe
- */
-function getToken(): string | null {
-  return localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token") || null;
+/** Lee el access token guardado por authService */
+function getAccess(): string | null {
+  const { access } = getTokens();
+  return access ?? null;
 }
 
-
-/**
- * Realiza una petición HTTP GET al backend.
- * - Construye la URL usando buildUrl()
- * - Agrega el token JWT en el header Authorization (si existe)
- * - Maneja errores 401/403 lanzando "UNAUTHORIZED"
- * - Lanza un Error con detalle si la respuesta no es ok
- * - Retorna el JSON ya parseado como tipo T
- *
- * 🔹 ¿Qué es <T>?
- *    - Es un "genérico" de TypeScript.
- *    - Significa que esta función puede devolver JSON con cualquier forma,
- *      y vos decidís el tipo esperado al usarla.
- * 
- * Ejemplo:
- *   const clientes = await apiGet<Cliente[]>("/clientes");
- *   // clientes va a ser tipado como un array de Cliente
- *
- * @param path Ruta relativa de la API (ej: "/clientes")
- * @param signal Opcional: AbortSignal para cancelar la request
- * @returns Promise<T> Una promesa con el resultado parseado
- */
-export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const token = getToken();
+/** GET con retry automático en 401/403 usando refresh token */
+export async function apiGet<T>(path: string, signal?: AbortSignal, _tried = false): Promise<T> {
   const url = buildUrl(path);
+  let token = getAccess();
 
-  const res = await fetch(url, {
+  let res = await fetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}), // agrega token si existe
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     signal,
   });
 
-  // Si no está autorizado → lanzamos error
+  // Reintento 1 vez con refresh si expira
+  if ((res.status === 401 || res.status === 403) && !_tried) {
+    try {
+      const newAccess = await refreshAccessToken(); // lee refresh_token del storage
+      token = newAccess;
+      res = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        signal,
+      });
+    } catch {
+      // Si falla el refresh, seguimos con el flujo de error
+    }
+  }
+
   if (res.status === 401 || res.status === 403) throw new Error("UNAUTHORIZED");
 
-  // Si la respuesta no es ok (ej: 404, 500...), detallamos el error
   if (!res.ok) {
     let detail = "";
     try { detail = JSON.stringify(await res.json()); }
@@ -85,6 +59,48 @@ export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> 
     throw new Error(`HTTP ${res.status} ${detail}`);
   }
 
-  // Si todo está bien → devolvemos el JSON ya tipado
+  return (await res.json()) as T;
+}
+
+/** (Opcional) Post con el mismo patrón de retry */
+export async function apiPost<T>(path: string, body: any, signal?: AbortSignal, _tried = false): Promise<T> {
+  const url = buildUrl(path);
+  let token = getAccess();
+
+  let res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+    signal,
+  });
+
+  if ((res.status === 401 || res.status === 403) && !_tried) {
+    try {
+      const newAccess = await refreshAccessToken();
+      token = newAccess;
+      res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(body),
+        signal,
+      });
+    } catch {}
+  }
+
+  if (res.status === 401 || res.status === 403) throw new Error("UNAUTHORIZED");
+
+  if (!res.ok) {
+    let detail = "";
+    try { detail = JSON.stringify(await res.json()); }
+    catch { detail = await res.text().catch(() => ""); }
+    throw new Error(`HTTP ${res.status} ${detail}`);
+  }
+
   return (await res.json()) as T;
 }
