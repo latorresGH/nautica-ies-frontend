@@ -4,8 +4,12 @@ export type KPIs = {
   ingresosMes: number;
 };
 
-export type BarSemana = { d: string; v: number }[];      // ej. [{d:"Lun", v:6}, ...]
-export type DonutPagos = { name: "Pago"|"Pendiente"|"Adeuda"; value: number }[];
+export type BarSemana = { d: string; v: number }[]; // ej. [{d:"Lun", v:6}, ...]
+
+export type DonutPagos = {
+  name: "Pago" | "Pendiente" | "Adeuda";
+  value: number;
+}[];
 
 export type TareaDia = {
   id: string;
