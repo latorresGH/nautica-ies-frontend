@@ -1,5 +1,5 @@
 import type { TareaDia } from "../../types/menu";
-import Skeleton from "../ui/Skeleton";
+import Skeleton from "../widgets/Skeleton/Skeleton";
 
 export default function TasksTable({ rows, loading }:{ rows: TareaDia[]; loading: boolean }) {
   if (loading) {

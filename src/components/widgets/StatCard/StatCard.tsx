@@ -1,11 +1,5 @@
-import Skeleton from "../ui/Skeleton";
-
-type Props = {
-  title: string;
-  value?: string | number;
-  icon?: React.ReactNode;   // usa el namespace React.* y no importás el tipo
-  loading?: boolean;
-};
+import Skeleton from "../Skeleton/Skeleton";
+import type {Props}  from "../../../types/StatCardType";
 
 export default function StatCard({ title, value, icon, loading = false }: Props) {
   return (

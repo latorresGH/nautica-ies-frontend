@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { KPIs, BarSemana, DonutPagos, TareaDia } from "../types/menu";
-import { fetchBarSemana, fetchDonutPagos, fetchKPIs, fetchTareasDia } from "./menuApi";
+import { fetchBarSemana, fetchDonutPagos, fetchKPIs, fetchTareasDia } from "../api/menuApi";
 
 // ---------- helpers fecha ----------
 function yyyymm(today = new Date()) {

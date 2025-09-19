@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getUserDisplayName } from "../api/authToken";
+import { getUserDisplayName } from "../../api/authToken";
 
 type Props = {
   onLogout?: () => void; // opcional: si tenés tu propio logout()

@@ -1,10 +1,10 @@
 import { Activity, UsersRound, Banknote } from "lucide-react";
-import StatCard from "../components/widgets/StatCard";
-import DaysAvailability from "../components/widgets/DaysAvailability";
-import BarWeek from "../components/charts/BarWeek";
-import DonutPagos from "../components/charts/DonutPagos";
-import TasksTable from "../components/table/TasksTable";
-import { useDashboardData } from "../api/useDashboardData";
+import StatCard from "../../components/widgets/StatCard/StatCard";
+import DaysAvailability from "../../components/widgets/DaysAvaliability/DaysAvailability";
+import BarWeek from "../../components/Charts/BarWeek";
+import DonutPagos from "../../components/Charts/DonutPagos";
+import TasksTable from "../../components/DailyTasks/TasksTable";
+import { useDashboardData } from "../../api/useDashboardData";
 
 export default function Dashboard() {
   // Hook con datos MOCK por ahora (luego lo conectamos al backend)
