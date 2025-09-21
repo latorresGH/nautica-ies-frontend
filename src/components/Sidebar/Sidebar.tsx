@@ -13,14 +13,13 @@ const items = [
 
 export default function Sidebar() {
   return (
-    // Contenedor relativo para posicionar el flyout
-    <aside className="relative h-screen bg-white border-r shadow-sm group">
+    <aside className="relative sticky top-0 h-[100dvh] bg-white border-r shadow-sm group">
       {/* ---- Raíl fijo (64px) ---- */}
       <div className="w-16 h-full flex flex-col group-hover:pointer-events-none">
         <div className="h-14 flex items-center justify-center border-b">
           <div className="w-6 h-6 rounded-full bg-neutral-200" />
         </div>
-        <nav className="py-2 flex-1">
+        <nav className="py-2 flex-1 overflow-y-auto">
           {items.map((it) => (
             <NavLink
               key={it.to}
@@ -41,7 +40,7 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* ---- Bandeja flotante (no empuja el layout) ---- */}
+      {/* ---- Bandeja flotante ---- */}
       <div
         className="pointer-events-none group-hover:pointer-events-auto
                     absolute left-0 top-0 bottom-0 w-64
@@ -51,7 +50,7 @@ export default function Sidebar() {
         <div className="h-14 flex items-center px-4 border-b font-medium">
           Menú
         </div>
-        <nav className="py-2">
+        <nav className="py-2 overflow-y-auto h-[calc(100%-3.5rem)]">
           {items.map((it) => (
             <NavLink
               key={it.to}
@@ -72,3 +71,4 @@ export default function Sidebar() {
     </aside>
   );
 }
+
