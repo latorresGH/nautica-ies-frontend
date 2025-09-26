@@ -2,7 +2,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recha
 import type { DonutPagos as DonutData } from "../../types/menu";
 
 const COLORS: Record<string, string> = {
-  "Pago":      "#22C55E", // green-500
+  "Pago":      "#83df83", // green-500
   "Pendiente": "#F59E0B", // amber-500
   "Adeuda":    "#EF4444", // red-500
 };
@@ -21,14 +21,14 @@ export default function DonutPagos({ data, loading }:{ data: DonutData; loading:
               nameKey="name"
               innerRadius={50}
               outerRadius={70}
-              paddingAngle={4}
+              paddingAngle={0}
             >
               {data.map((entry, i) => (
                 <Cell
                   key={i}
                   fill={COLORS[entry.name] ?? "#9CA3AF"}  // fallback gray
                   stroke="#00000096"
-                  strokeWidth={2}
+                  strokeWidth={1}
                 />
               ))}
             </Pie>
