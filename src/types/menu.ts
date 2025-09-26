@@ -22,3 +22,15 @@ export type TareaDia = {
   horario: string;
   estadoColor?: "green" | "blue" | "yellow";
 };
+
+export type DashboardDTO = {
+  fecha: string;              
+  usuariosActivos: number;
+  tareasHoy: number;
+  tareasPendientes: number;
+  turnosHoy: number;
+  cuotasVencidas: number;
+  ingresosMes: number;          
+  clientesDebenMes: number;
+  clientesPagaronMes: number;
+};

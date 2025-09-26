@@ -34,25 +34,27 @@ export default function Dashboard() {
       {/* --- Tarjetas superiores --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
-          title="Clientes activos"
-          value={kpis?.clientesActivos ?? 0}
+          title="Usuarios activos" // antes: "Clientes activos"
+          value={kpis?.clientesActivos ?? 0} // mostrando usuariosActivos bajo este label
           loading={loading}
-          icon={<UsersRound size={18} />}
         />
+
         <StatCard
           title="Tareas hoy"
           value={kpis?.tareasHoy ?? 0}
           loading={loading}
-          icon={<Activity size={18} />}
         />
+
         <StatCard
           title="Ingresos del mes"
           value={`$ ${kpis?.ingresosMes?.toFixed?.(2) ?? "0.00"}`}
           loading={loading}
-          icon={<Banknote size={18} />}
         />
+
         <div className="bg-white rounded-2xl border shadow-sm p-4">
-          <div className="text-sm text-neutral-500 mb-2">Estado de pagos del mes</div>
+          <div className="text-sm text-neutral-500 mb-2">
+            Estado de pagos del mes
+          </div>
           <DonutPagos data={donut} loading={loading} />
         </div>
       </div>
@@ -78,7 +80,10 @@ export default function Dashboard() {
           <h2 className="font-medium">Tareas del día</h2>
           <button className="text-sm text-blue-600">Ver todo</button>
         </div>
-        <TasksTable rows={Array.isArray(tareas) ? tareas : []} loading={loading} />
+        <TasksTable
+          rows={Array.isArray(tareas) ? tareas : []}
+          loading={loading}
+        />
       </section>
     </div>
   );

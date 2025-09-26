@@ -1,10 +1,25 @@
 // src/hooks/useDashboardData.ts
 import { useEffect, useState } from "react";
 import type { KPIs, BarSemana, DonutPagos, TareaDia } from "../types/menu";
-import { fetchBarSemana, fetchDonutPagos, fetchTareasDia } from "../api/menuApi";
+import type { DashboardDTO } from "../types/menu";
+import {
+  fetchBarSemana,
+  fetchTareasDia,
+  fetchKpis,
+  // si aún querés usar el endpoint viejo del donut, importalo también:
+  // fetchDonutPagos,
+} from "../api/menuApi";
 
-// ⬇️ Mientras no tengas esos endpoints en el backend, dejalo en false
-const CALL_REAL_APIS = false;
+// usar backend real
+const CALL_REAL_APIS = true;
+
+// fecha local segura YYYY-MM-DD (evita corrimiento por UTC)
+function yyyymmddLocal(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
 export function useDashboardData() {
   const [loading, setLoading] = useState(true);
@@ -24,54 +39,46 @@ export function useDashboardData() {
         setError(null);
 
         if (!CALL_REAL_APIS) {
-          // 🔹 Mock estable (UI no crashea aunque no haya backend)
-          const mockBar: BarSemana = [
-            { d: "Lun", v: 0 },
-            { d: "Mar", v: 0 },
-            { d: "Mié", v: 0 },
-            { d: "Jue", v: 0 },
-            { d: "Vie", v: 0 },
-            { d: "Sáb", v: 0 },
-            { d: "Dom", v: 0 },
-          ];
-          const mockDonut: DonutPagos = [];
-          const mockTareas: TareaDia[] = [];
-
-          if (!cancelled) {
-            setBar(mockBar);
-            setDonut(mockDonut);
-            setTareas(mockTareas);
-            setKpis({
-              clientesActivos: 0,
-              tareasHoy: mockTareas.length,
-              ingresosMes: 0,
-            });
-            setLoading(false);
-          }
+          // mocks de respaldo si querés desactivar llamadas
+          setBar([
+            { d: "Lun", v: 0 }, { d: "Mar", v: 0 }, { d: "Mié", v: 0 },
+            { d: "Jue", v: 0 }, { d: "Vie", v: 0 }, { d: "Sáb", v: 0 }, { d: "Dom", v: 0 },
+          ]);
+          setDonut([]);
+          setTareas([]);
+          setKpis({ clientesActivos: 0, tareasHoy: 0, ingresosMes: 0 });
+          setLoading(false);
           return;
         }
 
-        // 🔹 Cuando tengas backend real, activás CALL_REAL_APIS=true
-        const hoyISO = new Date().toISOString().slice(0, 10);
-        const mes = hoyISO.slice(0, 7);
+        const hoyISO = yyyymmddLocal();
 
-        const [bar, donutData, tareasHoy] = await Promise.all([
+        const [dto, bar, tareasHoy] = await Promise.all([
+          fetchKpis({ fecha: hoyISO }) as Promise<DashboardDTO>,
           fetchBarSemana().catch(() => [] as BarSemana),
-          fetchDonutPagos({ mes }).catch(() => [] as DonutPagos),
           fetchTareasDia({ fecha: hoyISO }).catch(() => [] as TareaDia[]),
+          // si quisieras seguir usando el endpoint viejo del donut:
+          // fetchDonutPagos({ mes: hoyISO.slice(0,7) }).catch(() => [] as DonutPagos),
         ]);
 
         if (cancelled) return;
 
-        setBar(Array.isArray(bar) ? bar : []);
-        setDonut(Array.isArray(donutData) ? donutData : []);
-        setTareas(Array.isArray(tareasHoy) ? tareasHoy : []);
-
+        // KPIs (tu card se llama "Clientes activos", pero el dato es usuariosActivos)
         setKpis({
-          clientesActivos: 0,           // TODO: esperar endpoint real
-          tareasHoy: tareasHoy.length,  // derivado
-          ingresosMes: 0,               // TODO: esperar endpoint real
+          clientesActivos: dto.usuariosActivos ?? 0,
+          tareasHoy: dto.tareasHoy ?? 0,
+          ingresosMes: Number(dto.ingresosMes ?? 0),
         });
+
+        // Donut: Pagaron vs Deben (mes actual)
+        setDonut([
+          { name: "Pago", value: dto.clientesPagaronMes ?? 0 },
+          { name: "Adeuda",   value: dto.clientesDebenMes ?? 0 },
+        ]);
+
+
+        setBar(Array.isArray(bar) ? bar : []);
+        setTareas(Array.isArray(tareasHoy) ? tareasHoy : []);
       } catch (e: any) {
         if (!cancelled) setError(e?.message ?? "Error cargando dashboard");
       } finally {
